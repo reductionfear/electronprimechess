@@ -1,0 +1,222 @@
+<project_specification>
+  <project_name>Prime Chess Clone - Chess Automation & Analysis Overlay</project_name>
+
+  <overview>
+    Develop a high-performance Electron desktop application that functions as an intelligent overlay for web-based chess platforms (Chess.com, Lichess.org, Worldchess). The application will detect active game boards in external browsers, synchronize the game state with a local Stockfish engine, visually project the best moves (arrows/highlights) directly onto the screen, and offer an "Autoplay" feature to execute moves automatically using human-like mouse simulation.
+  </overview>
+
+  <technology_stack>
+    <core>
+      <framework>Electron (Main Process & Renderer)</framework>
+      <language>TypeScript / Node.js</language>
+      <overlay_method>Transparent Click-through Windows</overlay_method>
+      <input_simulation>RobotJS or Nut.js (Mouse/Keyboard automation)</input_simulation>
+    </core>
+    <frontend>
+      <framework>React with Vite</framework>
+      <styling>Tailwind CSS (Dark Mode optimization)</styling>
+      <state_management>Zustand (High-frequency state updates)</state_management>
+      <components>Radix UI (Headless accessible components)</components>
+    </frontend>
+    <engine_backend>
+      <engine>Stockfish 16+ (NNUE enabled)</engine>
+      <interface>UCI (Universal Chess Interface) Protocol</interface>
+      <wrapper>node-uci or custom spawn process</wrapper>
+    </engine_backend>
+    <browser_integration>
+      <detection>Active Window Title Detection</detection>
+      <communication>Chrome DevTools Protocol (CDP) or DOM Injection via WebSocket</communication>
+      <game_logic>Chess.js (FEN validation and move generation)</game_logic>
+    </browser_integration>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - Node.js & npm/pnpm installed
+      - Stockfish binary specific to OS architecture (avx2/bmi2) placed in /resources
+      - RobotJS build dependencies (Python, C++ build tools)
+    </environment_setup>
+  </prerequisites>
+
+  <core_features>
+    <platform_integration>
+      - Support for Chess.com, Lichess.org, and Worldchess.com
+      - Automatic detection of player color (White/Black)
+      - Real-time FEN (Forsyth–Edwards Notation) scraping
+      - WebSocket listener for native game move events (Low latency)
+      - DOM Observer fallback for visual updates
+    </platform_integration>
+
+    <analysis_engine>
+      - Local Stockfish instance management
+      - Configurable depth (1-30+)
+      - MultiPV support (Analyze top 1, 2, or 3 lines simultaneously)
+      - Evaluation display (Centipawn score or Mate in X)
+      - "Rating" limiter (Simulate lower ELO by adding noise/errors)
+    </analysis_engine>
+
+    <visual_overlay>
+      - Drawing colored arrows on the board:
+        - Green Arrow: Best Move
+        - Orange Arrow: Second Best / "Good" Move
+        - Red Arrow: Blunder/Threats
+      - Highlight source and destination squares
+      - Real-time evaluation bar overlay
+    </visual_overlay>
+
+    <automation_autoplay>
+      - "Autoplay" toggle switch
+      - Humanization algorithms:
+        - Variable move delay (e.g., 50ms - 2000ms random variance)
+        - Mouse path bezier curves (avoiding instant teleportation)
+      - Mode selection:
+        - "Drag" mode (Simulate drag and drop)
+        - "Click" mode (Click source, then click destination)
+    </automation_autoplay>
+
+    <settings_preferences>
+      - Engine threads and hash size configuration
+      - Hotkeys (Toggle Overlay, Force Move, Pause)
+      - Visual customization (Arrow opacity, colors)
+      - Browser preference (Chrome, Edge, Brave, Firefox)
+    </settings_preferences>
+  </core_features>
+
+  <data_structure>
+    <local_storage>
+      <user_config>
+        - theme (dark/light)
+        - delay_min (ms)
+        - delay_max (ms)
+        - auto_queue (bool)
+        - engine_depth (int)
+        - multipv_count (int)
+      </user_config>
+      <game_session>
+        - current_fen
+        - move_history
+        - current_eval
+        - is_my_turn
+        - opponent_name
+      </game_session>
+    </local_storage>
+  </data_structure>
+
+  <ui_layout>
+    <main_window>
+      - Compact, floating utility window (Always on Top option)
+      - Dark themed, "Hacker/Cyberpunk" aesthetic (matches screenshots)
+      - Header: Logo "PRIME CHESS" + Minimize/Close
+      - Status Bar: "Waiting...", "Thinking...", or Best Move "e2e4 (0.45)"
+    </main_window>
+
+    <control_panel>
+      - Platform Selector Cards (Large clickable icons for Chess.com, Lichess, etc.)
+      - Sliders:
+        - Rating (Max/Min)
+        - Depth (Search depth)
+        - MultiPV (Number of lines)
+        - Delay (ms)
+      - Toggles:
+        - Autoplay (Main switch)
+        - Key Mode / Drag Mode toggle
+      - Action Buttons: "Settings", "Start/Stop"
+    </control_panel>
+
+    <overlay_layer>
+      - Invisible full-screen click-through window
+      - Aligned precisely over the browser chessboard
+      - Canvas layer for drawing arrows and highlights
+    </overlay_layer>
+  </ui_layout>
+
+  <key_interactions>
+    <initialization>
+      1. User opens Prime Chess.
+      2. User selects the target site (e.g., Lichess).
+      3. App attempts to find the browser window handle.
+      4. App injects script or attaches debugger to read board coordinates.
+    </initialization>
+
+    <game_loop>
+      1. App detects a move occurred on board (via DOM mutation or socket).
+      2. New FEN is extracted and validated.
+      3. FEN is sent to Stockfish process via stdin.
+      4. Stockfish analyzes and streams info via stdout.
+      5. UI updates with evaluation score (e.g., +1.5).
+      6. Overlay draws arrow for best move.
+      7. If Autoplay is ON and it is user's turn:
+         a. Wait for randomized delay.
+         b. Calculate screen coordinates for squares.
+         c. Trigger robot input to execute move.
+    </game_loop>
+  </key_interactions>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Electron Foundation & Engine Binding</title>
+      <tasks>
+        - Initialize Electron project with Vite/React.
+        - Compile/Download Stockfish binary.
+        - Create a Node.js wrapper class to spawn the Stockfish process and handle UCI commands (position, go, stop).
+        - Parse engine output strings to extract moves and evaluations.
+      </tasks>
+    </step>
+
+    <step number="2">
+      <title>Screen & DOM Analysis</title>
+      <tasks>
+        - Implement screen scraping or DOM injection logic.
+        - Create "Board Adapters" for Chess.com and Lichess (CSS selectors are different for each).
+        - Calculate board geometry (x, y, width, height of squares) relative to the screen.
+      </tasks>
+    </step>
+
+    <step number="3">
+      <title>Overlay System</title>
+      <tasks>
+        - Create a transparent, click-through secondary Electron window.
+        - Implement a Canvas or SVG layer in React.
+        - Write logic to draw arrows from Square A to Square B based on screen coordinates.
+      </tasks>
+    </step>
+
+    <step number="4">
+      <title>Input Simulation (Autoplay)</title>
+      <tasks>
+        - Integrate RobotJS/Nut.js.
+        - Create a coordinate mapper (Board Square -> Screen Pixel).
+        - Implement "Humanizer" logic (Bezier curve mouse movements, random jitters).
+        - Implement click/drag logic.
+      </tasks>
+    </step>
+
+    <step number="5">
+      <title>UI & State Management</title>
+      <tasks>
+        - Build the control panel UI (Tailwind).
+        - wire up sliders to state (Zustand).
+        - Connect state changes to Engine UCI commands (e.g., changing MultiPV sends "setoption name MultiPV value X").
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <performance>
+      - Engine analysis starts within &lt;100ms of a move.
+      - Overlay renders at 60fps without lagging the browser.
+      - CPU usage remains optimized (Stockfish usage configurable).
+    </performance>
+
+    <reliability>
+      - Accurate board detection regardless of browser window size or zoom level.
+      - Handles game end, aborts, and new game starts automatically.
+      - Robust error handling if Stockfish crashes or browser closes.
+    </reliability>
+
+    <stealth_safety>
+      - Mouse movements appear natural (no instant jumps).
+      - Option to run in "External Device" mode (no code injection, visual scraping only) to avoid anti-cheat detection scripts.
+    </performance>
+  </success_criteria>
+</project_specification>
