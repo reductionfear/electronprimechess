@@ -1,12 +1,51 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PlatformSelector } from './components/PlatformSelector';
 import { ControlPanel } from './components/ControlPanel';
 import { EngineOutput } from './components/EngineOutput';
+import { EvalBar } from '../overlay/EvalBar';
 import { useStore } from './store/useStore';
 import './styles/index.css';
 
 function App() {
-  const { selectedPlatform, isConnected } = useStore();
+  const { selectedPlatform, isConnected, setIsConnected, updateGameState, setStatus, setStatusMessage } = useStore();
+
+  useEffect(() => {
+    // Check if window.electronAPI is available
+    if (typeof window !== 'undefined' && window.electronAPI) {
+      // Set up engine event listeners
+      window.electronAPI.onEngineReady(() => {
+        console.log('Engine ready');
+        setIsConnected(true);
+        setStatus('idle');
+        setStatusMessage('Engine ready');
+      });
+
+      window.electronAPI.onEngineAnalysis((analysis) => {
+        console.log('Engine analysis:', analysis);
+        updateGameState({
+          bestMove: analysis.bestMove,
+          currentEval: analysis.score || null,
+          mate: analysis.mate || null,
+          lines: analysis.lines,
+        });
+        setStatus('idle');
+        setStatusMessage(`Best: ${analysis.bestMove}`);
+      });
+
+      window.electronAPI.onEngineInfo((info) => {
+        console.log('Engine info:', info);
+        setStatus('thinking');
+        setStatusMessage(`Depth: ${info.depth}`);
+      });
+
+      window.electronAPI.onEngineCrashed(() => {
+        console.error('Engine crashed');
+        setIsConnected(false);
+        setStatus('error');
+        setStatusMessage('Engine crashed');
+      });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -65,6 +104,9 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Eval Bar - shown when connected */}
+      {isConnected && selectedPlatform && <EvalBar />}
 
       {/* Footer */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-700 bg-gray-900/50 backdrop-blur-sm">

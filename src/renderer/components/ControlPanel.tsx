@@ -224,6 +224,22 @@ export const ControlPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Test Engine Button */}
+      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <button
+          onClick={async () => {
+            if (window.electronAPI) {
+              // Test with starting position
+              const result = await window.electronAPI.engineAnalyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+              console.log('Analysis result:', result);
+            }
+          }}
+          className="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all"
+        >
+          Test Engine Analysis
+        </button>
+      </div>
     </div>
   );
 };
