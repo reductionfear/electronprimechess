@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import * as Slider from '@radix-ui/react-slider';
 import * as Switch from '@radix-ui/react-switch';
+import { STARTING_FEN } from '../../utils/fen';
 
 export const ControlPanel: React.FC = () => {
   const {
@@ -231,7 +232,7 @@ export const ControlPanel: React.FC = () => {
           onClick={async () => {
             if (window.electronAPI) {
               // Test with starting position
-              const result = await window.electronAPI.engineAnalyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+              const result = await window.electronAPI.engineAnalyze(STARTING_FEN);
               console.log('Analysis result:', result);
             }
           }}

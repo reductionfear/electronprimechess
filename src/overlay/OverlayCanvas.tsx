@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { useStore } from '../store/useStore';
-import { squareToCoords } from '../../utils/coordinates';
+import { useStore } from '../renderer/store/useStore';
+import { squareToCoords } from '../utils/coordinates';
 
 interface Arrow {
   from: string;

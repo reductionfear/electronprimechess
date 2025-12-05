@@ -6,7 +6,7 @@ export const EngineOutput: React.FC = () => {
 
   const formatEval = (eval_: number | null, mate: number | null): string => {
     if (mate !== null) {
-      return `M${mate > 0 ? mate : mate}`;
+      return `M${Math.abs(mate)}`;
     }
     if (eval_ !== null) {
       return (eval_ / 100).toFixed(2);
